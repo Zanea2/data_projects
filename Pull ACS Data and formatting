@@ -1,0 +1,73 @@
+rm(list = ls())
+
+
+###############################
+#Load packages
+###############################
+
+library(stringr)
+library("tidycensus")
+library("tidyverse")
+library("openxlsx")
+
+###############################
+#Load variables
+###############################
+c <- c(str_c("B07410_0", str_pad(1:11, width = 2, pad = 0)), str_c("B25070_0", str_pad(1:11, width = 2, pad = 0)), 'B25071_001', str_c("C17002_00", str_pad(1:8, width = 1, pad = 0)),str_c("B18140_00", str_pad(1:4, width = 1, pad = 0)),'C24050_014','C24050_057','C24050_043','C24050_029','C24050_015','C24050_071', str_c("B07009_00", str_pad(1:6, width = 1, pad = 0)),str_c("B15003_0", str_pad(1:25, width = 2, pad = 0)),'B19301A_001','B19301B_001','B19301C_001','B19301D_001','B19301E_001','B19301F_001','B19301G_001','B19301H_001','B19301I_001','B19301_001',"B19113_001",str_c("B19049_00", str_pad(1:5, width = 1, pad = 0)),"B07411_001", 'B19013E_001','B19025E_001', 'B19113E_001', 'B07412_001','B07412_002','B07412_003','B07412_004', str_c("B08519_00", str_pad(1:9, width = 1, pad = 0)),str_c("B19001_0", str_pad(1:17, width = 2, pad = 0)),'B19013_001')
+Income <- c(str_c("B07410_0", str_pad(1:11, width = 2, pad = 0)), "B19013_001", "B19113_001", 'B19301_001', 'B25071_001', str_c("C17002_00", str_pad(1:8, width = 1, pad = 0)), str_c("B19049_00", str_pad(1:5, width = 1, pad = 0)))
+Education <-c(str_c("B08519_00", str_pad(1:9, width = 1, pad = 0)))
+Occupation <- c("C24050_057","C24050_043","C24050_029","C24050_015","C24050_071","C24050_014")
+
+
+acs_variables_all <- load_variables('acs5', year =2022 ) 
+acs_variables_all$variable <-  acs_variables_all$name
+year <- c(2010:2022)
+
+testing_load <- 
+  get_acs(
+    variables = c, 
+    geography="county subdivision",
+    county = c("Cass","Berrien", "Van Buren"),
+    state="MI",
+    geometry = TRUE,
+    cache_table = TRUE,
+    year = 2022
+  ) %>%
+  full_join(get_acs(
+    variables = c, 
+    geography="county",
+    county = c("Cass","Berrien", "Van Buren"),
+    state="MI",
+    geometry = FALSE,
+    cache_table = TRUE,
+    year = 2022
+  )) %>%
+  left_join(y= acs_variables_all) %>%
+  select( -name, -geography) 
+
+renaming_label <- testing_load %>%
+  mutate(label = paste(concept," ",label, " ", variable),
+         label = str_replace_all(label, pattern = c("Estimate!!Total:!!"= "",
+                                                    "Estimate!!"= "",
+                                                    " " = "_",
+                                                    "," =  "",
+                                                    "--"=  "",
+                                                    "-"=  " ",
+                                                    ":" = "",
+                                                    "!"= "",
+                                                    "___"= "_",
+                                                    "\\$"= "USD",
+                                                    "\\("= "",
+                                                    "\\)"= ""
+                                                    )))
+
+Income_din_the_last_12_months <- renaming_label %>%
+  filter(variable %in% Income)
+Education_data <- renaming_label %>%
+  filter(variable %in% Education)
+Occupation_data <- renaming_label %>%
+  filter(variable %in% Occupation)
+
+wide <- renaming_label %>%
+  select(-concept,-variable)%>%
+  pivot_wider(names_from = label, values_from = c(estimate, moe)) 
