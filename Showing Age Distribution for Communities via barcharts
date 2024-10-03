@@ -1,0 +1,71 @@
+
+#################################################
+#Clear Environment
+#################################################
+
+rm(list = ls())
+
+#################################################
+#Load Libraries
+#################################################
+library(readxl)
+library(tidyr)
+library(readxl)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(plyr)
+library(ggpubr)
+#################################################
+#Load Data
+#################################################
+load("barchart_func.rda")
+load("Total_Population_Count.rda")
+age_by_slice <- Total_Population_Count %>%
+  slice(2:19) %>%
+  separate(label,sep ='!!',c("dc1", "dc2", "dc3","Age_Group")) %>%
+  select(Age_Group,everything(),-dc1,-dc2,-dc3,-variable)
+save(age_by_slice, file = "age_by_slice.rda")
+
+
+
+
+#################################################
+#Create function
+#################################################
+barchart_func <- 
+  function(
+  dataset,
+  Community,
+  graph_title_as_string)
+    
+  {
+  ggplot(dataset, aes(dataset,x = factor(Age_Group, levels= Age_Group), y = Community, fill = "position")) +
+    geom_bar(stat = "identity", color = "black", fill = "lightblue") +
+    geom_text(aes(label = paste("         ", Community)), color = "black", position = position_dodge(width = .9))+
+    coord_flip() +
+    #scale_y_continuous(n.breaks=10)+
+    labs(title = graph_title_as_string, x = "Age Group", y = "Population" ) +
+    theme_gray(base_size = 12)+
+    theme(axis.title.y = element_blank()) +
+    scale_x_discrete(expand = c(0, 0)) + 
+    scale_y_discrete(expand = expansion(mult = c(0,.05), add = 0))
+}
+save(barchart_func, file= "barchar_func.rda")
+
+
+#################################################
+#Create several barcharts and then merge
+#################################################
+
+
+Cass <- barchart_func(age_by_slice,age_by_slice$Cass_County_Michigan_2020,"Cass County")
+Dowagiac <- barchart_func(age_by_slice, age_by_slice$Dowagiac_City_Cass_County_2020, "City of Dowagiac")
+Lagrange <- barchart_func(age_by_slice, age_by_slice$Lagrange_Township_Cass_County_2020, "LaGrange Township")
+Pokagon <- barchart_func(age_by_slice, age_by_slice$Pokagon_Township_Cass_County_2020, "Pokagon Township")
+Silver_Creek <- barchart_func(age_by_slice, age_by_slice$Silver_Creek_Township_Cass_County_2020, " Silver Creek Township")
+Wayne <- barchart_func(age_by_slice, age_by_slice$Wayne_Township_Cass_County_2020, "Wayne Township")
+
+Figure <- ggarrange(Dowagiac, Cass, Lagrange, Pokagon, Silver_Creek, Wayne,
+                    ncol = 2, nrow = 3)
+Figure
