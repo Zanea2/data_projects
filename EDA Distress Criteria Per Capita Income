@@ -1,0 +1,41 @@
+rm(list = ls())
+
+
+###############################
+#Load packages
+###############################
+
+library("stringr")
+library("tidycensus")
+library("tidyverse")
+library("gt")
+colorscale <- c(c("gray","red","orange","yellow","green","cornflowerblue","blue1"))
+###############################
+#Load data
+###############################
+TEST <- get_acs(
+  geography = "tract",
+  county = c("Berrien","Cass","Van Buren"),
+  variables = c(PCI = "B19301_001"),
+  state = "MI",
+  year = 2022,
+  geometry = TRUE,
+  cache = TRUE
+) %>%
+  mutate(PCI = 74149) %>%
+  mutate(Percent_of_US_PCI = estimate/PCI)
+###############################
+#create map
+###############################
+PCI_Region <- ggplot(TEST) +
+  geom_sf(aes(fill = Percent_of_US_PCI))+
+  scale_fill_stepsn(colors = colorscale, breaks=c("80%"= .5,"70%"=.6,"60%"=.65, "50%"=.8, "inelligible" = .80000000000000000001), name = "Grant Rate") +
+  coord_sf(datum = NA) +
+  labs(title = " Distress Criteria Per EDA Guidelines (Census Bureau American Community Survey 2022)", color = "Legend", 
+       caption =
+         "EDA Distress Criteria for an area is determined by 24 month unemployment rate and/or per capita income in comparison to the US
+         and determines amount the applicant must pay.                
+  "
+         ) +
+  theme(legend.text = element_text(size = 14,vjust = 2.25), legend.title = element_text(size = 14),legend.position = "right", title = element_text(size = 14),legend.key.size = unit(1.5, 'cm'),plot.caption = element_text(hjust = .5))
+PCI_Region
