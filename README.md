@@ -1,1 +1,1 @@
-The Census 2000-2020 and ACS pull data and formatting is the code I used to pull and manage the mutate the Census data so that I can use it for other projects. Other additions create several tables, maps, and graphs made using the data.
+The Census 2000-2020 and ACS pull data and formatting is the code I used to pull and mutate the Census data so that I can use it for other projects. Other additions create several tables, maps, and graphs made using the data.
