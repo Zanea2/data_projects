@@ -22,7 +22,7 @@ TEST <- get_acs(
   geometry = TRUE,
   cache = TRUE
 ) %>%
-  mutate(PCI = 74149) %>%
+  mutate(PCI = 37683) %>%
   mutate(Percent_of_US_PCI = estimate/PCI)
 ###############################
 #create map
