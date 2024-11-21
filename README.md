@@ -1,1 +1,1 @@
-The Census 2000-2020 and ACS pull data and formatting is the code I used to pull and mutate the Census data so that I can use it for other projects. Other additions create several tables, maps, and graphs made using the data.
+Pulling down data from the 2000, 2010, and 2020 US Census, ACS data, and BLS data and making graphs, charts and maps using the US Census and Bureau of Labor Statistics API's. 
