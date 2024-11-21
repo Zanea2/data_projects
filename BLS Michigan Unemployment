@@ -1,0 +1,55 @@
+
+
+  
+library(tidyverse)
+library(glue)
+library(httr)
+library(jsonlite)
+  
+api_key <- ""
+
+#API URL from https://www.bls.gov/developers/api_signature_v2.htm#single
+
+url <- "https://api.bls.gov/publicAPI/v2/timeseries/data/"
+
+#payload body Find Series ID in data finder
+
+payload <- glue('{
+"seriesid" :["LASST260000000000003"],
+"startyear" : "2005",
+"endyear" : "2024",
+"registrationkey" :"{{api_key}}"
+}', .open="{{", .close="}}")
+
+#payload <- list('seriesid'="LASST260000000000003", 'startyear'='2010', 'endyear'='2012')
+#POST request
+
+response <- POST(url, 
+                 body = payload,
+                 content_type("application/json"),
+                 encode = "json")
+
+#Convert JSON to list
+x<- content(response, "text") %>% jsonlite::fromJSON()
+
+#create tibble (w/data cleaning)
+
+dataset <- x$Results$series$data[[1]] %>% 
+  as.data.frame() 
+
+Michigan_23 <- dataset  %>%
+  mutate(year_month = paste(periodName," ", year)) %>%
+  select(-footnotes,-latest)%>%
+  filter(year == 2023 ) %>%
+  mutate(period = str_sub(period,2),
+         place = "Michigan") %>%
+  arrange(period) %>%
+  group_by(year) 
+  
+
+ggplot_Michigan_23 <- Michigan_23 %>%
+  ggplot( aes(x = factor(periodName, levels = periodName), y = value, group = year, color = year)) + 
+  theme_dark()+
+  geom_line(linewidth = 4) +
+  geom_point(size=7, color = "black") +
+  scale_x_discrete(expand = c(0, 0))
